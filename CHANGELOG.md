@@ -1,5 +1,46 @@
 # Changelog
 
+## 5.12.0 (2025-10-03)
+
+Full Changelog: [v5.11.0...v5.12.0](https://github.com/cloudflare/terraform-provider-cloudflare/compare/v5.11.0...v5.12.0)
+
+### Features
+
+* chore: use cloudflare-go@next for the 'next' branch ([8d8ff6d](https://github.com/cloudflare/terraform-provider-cloudflare/commit/8d8ff6d20993ab3127b3fcdbb2f17a93835ca70d))
+* modernize zero_trust_tunnel_cloudflared_config tests and fix warp_routing ([#6294](https://github.com/cloudflare/terraform-provider-cloudflare/issues/6294)) ([36d38a6](https://github.com/cloudflare/terraform-provider-cloudflare/commit/36d38a602dd53d537c8c1f25ee18910e39bdc36c))
+* modernize zero_trust_tunnel_cloudflared_virtual_network tests and improve ([#6293](https://github.com/cloudflare/terraform-provider-cloudflare/issues/6293)) ([1b0f6d6](https://github.com/cloudflare/terraform-provider-cloudflare/commit/1b0f6d6c3bd2d22b7ac40a006a20ded3105ffe46))
+
+
+### Bug Fixes
+
+* **cloudflare_workflow:** download dependencies for workflow resource acceptance tests ([#6302](https://github.com/cloudflare/terraform-provider-cloudflare/issues/6302)) ([84bade9](https://github.com/cloudflare/terraform-provider-cloudflare/commit/84bade9cb649961e9e732ad04147581cb60cddb6))
+* enable skipped gateway policy tests and simplify quarantine test ([#6296](https://github.com/cloudflare/terraform-provider-cloudflare/issues/6296)) ([b220f2b](https://github.com/cloudflare/terraform-provider-cloudflare/commit/b220f2b369693b44fcb3b42ead3ba9e9682c5295))
+* fix zero_trust_dex_test tests ([#6301](https://github.com/cloudflare/terraform-provider-cloudflare/issues/6301)) ([0345a4d](https://github.com/cloudflare/terraform-provider-cloudflare/commit/0345a4d1ba765e87083ddc807e2d913ec1d54d80))
+
+
+### Chores
+
+* **api:** update composite API spec ([5b54f0d](https://github.com/cloudflare/terraform-provider-cloudflare/commit/5b54f0da6c840ea6b6b5c079b41da732b45a2e10))
+* **api:** update composite API spec ([0421b6a](https://github.com/cloudflare/terraform-provider-cloudflare/commit/0421b6a436786d6623646f470d5d33cd0a0fd440))
+* **api:** update composite API spec ([d0f7eb4](https://github.com/cloudflare/terraform-provider-cloudflare/commit/d0f7eb487eb31eefebdaff92b61879eea36fcf6f))
+* **api:** update composite API spec ([e8a2650](https://github.com/cloudflare/terraform-provider-cloudflare/commit/e8a2650765ddf2aafda18e93e7f739484087b561))
+* **api:** update composite API spec ([d0784b3](https://github.com/cloudflare/terraform-provider-cloudflare/commit/d0784b3e77bee624a73d1443242bd1e3927ee63b))
+* **api:** update composite API spec ([3490350](https://github.com/cloudflare/terraform-provider-cloudflare/commit/349035066ad623182690511b3b01a96ce7185c33))
+* **api:** update composite API spec ([c009139](https://github.com/cloudflare/terraform-provider-cloudflare/commit/c0091397a7cbaffefaf6fb941cc8cdf96f8a36fd))
+* **api:** update composite API spec ([385cc44](https://github.com/cloudflare/terraform-provider-cloudflare/commit/385cc44b8ee9c9ef5a5c0662d75667be0a4ec107))
+* **api:** update composite API spec ([7dc37da](https://github.com/cloudflare/terraform-provider-cloudflare/commit/7dc37da6a4774e339a7b29302c79b74de2ec8cc2))
+* **api:** update composite API spec ([3fc4cf6](https://github.com/cloudflare/terraform-provider-cloudflare/commit/3fc4cf6a55c43b0cfdd3af1df0815da408f94500))
+* **api:** update composite API spec ([d812ed9](https://github.com/cloudflare/terraform-provider-cloudflare/commit/d812ed90d0e153f04ee877de77a0aab68d21c458))
+* **api:** update composite API spec ([35aca13](https://github.com/cloudflare/terraform-provider-cloudflare/commit/35aca139e0baf5129b332c7af2b15f524517a5cd))
+* **api:** update composite API spec ([f610c3e](https://github.com/cloudflare/terraform-provider-cloudflare/commit/f610c3ee159af9d45afb79e9290faf60f6e4c30d))
+* **api:** update composite API spec ([b435318](https://github.com/cloudflare/terraform-provider-cloudflare/commit/b4353183a097c6d2aebe5f475d4494b6c7740edf))
+* **internal:** codegen related update ([70652b4](https://github.com/cloudflare/terraform-provider-cloudflare/commit/70652b459d1de7c429faf4eec5c96fc23885ed6f))
+* **internal:** codegen related update ([0504080](https://github.com/cloudflare/terraform-provider-cloudflare/commit/050408034c02c935d48996ca29f5bc31be7a7d6c))
+* **pages_project:** only sweep pages projects resources created during testing ([#6298](https://github.com/cloudflare/terraform-provider-cloudflare/issues/6298)) ([1a2daa3](https://github.com/cloudflare/terraform-provider-cloudflare/commit/1a2daa3495620ecb6e285580649aab935565f6f0))
+* **pages_project:** update CLOUDFLARE_PAGES_OWNER and CLOUDFLARE_PAGES_REPO used for acceptance tests ([#6300](https://github.com/cloudflare/terraform-provider-cloudflare/issues/6300)) ([939499e](https://github.com/cloudflare/terraform-provider-cloudflare/commit/939499e29181e0e0e8ca962e33165c95127bfffd))
+* **r2_bucket_lock, r2_bucket_lifecycle:** add acceptance tests  ([#6299](https://github.com/cloudflare/terraform-provider-cloudflare/issues/6299)) ([1fdbd28](https://github.com/cloudflare/terraform-provider-cloudflare/commit/1fdbd28c65c693b64a59fcc66584fb51c7c8014f))
+* **zerot trust dl resources:** Add acceptance tests for DLP resources (rebased version of !5751) ([#6233](https://github.com/cloudflare/terraform-provider-cloudflare/issues/6233)) ([cbd0568](https://github.com/cloudflare/terraform-provider-cloudflare/commit/cbd05686898c5d34c0162e7d1b03fb6701e8e370))
+
 ## 5.11.0 (2025-10-02)
 
 Full Changelog: [v5.10.1...v5.11.0](https://github.com/cloudflare/terraform-provider-cloudflare/compare/v5.10.1...v5.11.0)
