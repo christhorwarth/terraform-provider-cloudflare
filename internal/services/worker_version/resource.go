@@ -82,14 +82,17 @@ func (r *WorkerVersionResource) Create(ctx context.Context, req resource.CreateR
 		return
 	}
 
-	modules := data.Modules
-	if modules != nil {
-		for _, mod := range *data.Modules {
-			content, err := readFile(mod.ContentFile.ValueString())
-			if err != nil {
-				resp.Diagnostics.AddError("Error reading file", err.Error())
+	planModules := data.Modules
+	if planModules != nil {
+		for _, mod := range *planModules {
+			if !mod.ContentFile.IsNull() && !mod.ContentFile.IsUnknown() {
+				content, err := readFile(mod.ContentFile.ValueString())
+				if err != nil {
+					resp.Diagnostics.AddError("failed to read module content file", err.Error())
+					return
+				}
+				mod.ContentBase64 = types.StringValue(base64.StdEncoding.EncodeToString([]byte(content)))
 			}
-			mod.ContentBase64 = types.StringValue(base64.StdEncoding.EncodeToString([]byte(content)))
 		}
 	}
 
@@ -138,7 +141,37 @@ func (r *WorkerVersionResource) Create(ctx context.Context, req resource.CreateR
 		return
 	}
 	data = &env.Result
-	data.Modules = modules
+
+	// Compute content_sha256 and restore content_file or content_base64 from plan
+	moduleNameMap := make(map[string]*WorkerVersionModulesModel)
+	if planModules != nil {
+		for _, mod := range *planModules {
+			moduleNameMap[mod.Name.ValueString()] = mod
+		}
+	}
+	if data.Modules != nil {
+		for _, mod := range *data.Modules {
+			contentBase64 := mod.ContentBase64.ValueString()
+			content, err := base64.StdEncoding.DecodeString(contentBase64)
+			if err != nil {
+				resp.Diagnostics.AddError("failed to decode module content", err.Error())
+				return
+			}
+			contentSHA256, err := calculateStringHash(string(content))
+			if err != nil {
+				resp.Diagnostics.AddError("failed to calculate content hash", err.Error())
+				return
+			}
+			mod.ContentSHA256 = types.StringValue(contentSHA256)
+
+			if planMod, ok := moduleNameMap[mod.Name.ValueString()]; ok {
+				if !planMod.ContentFile.IsNull() {
+					mod.ContentFile = planMod.ContentFile
+					mod.ContentBase64 = types.StringNull()
+				}
+			}
+		}
+	}
 
 	if assets != nil && data.Assets != nil {
 		assets.Config = data.Assets.Config
@@ -204,7 +237,6 @@ func (r *WorkerVersionResource) Read(ctx context.Context, req resource.ReadReque
 	data = &env.Result
 	data.Assets = assets
 
-	// Refresh content_sha256 on each module
 	moduleNameMap := make(map[string]*WorkerVersionModulesModel)
 	if stateModules != nil {
 		for _, mod := range *stateModules {
@@ -227,7 +259,10 @@ func (r *WorkerVersionResource) Read(ctx context.Context, req resource.ReadReque
 
 			mod.ContentSHA256 = types.StringValue(contentSHA256)
 			if stateMod, ok := moduleNameMap[mod.Name.ValueString()]; ok {
-				mod.ContentFile = stateMod.ContentFile
+				if !stateMod.ContentFile.IsNull() {
+					mod.ContentFile = stateMod.ContentFile
+					mod.ContentBase64 = types.StringNull()
+				}
 			}
 		}
 	}
@@ -286,6 +321,7 @@ func (r *WorkerVersionResource) ImportState(ctx context.Context, req resource.Im
 		path_version_id,
 		workers.BetaWorkerVersionGetParams{
 			AccountID: cloudflare.F(path_account_id),
+			Include:   cloudflare.F(workers.BetaWorkerVersionGetParamsIncludeModules),
 		},
 		option.WithResponseBodyInto(&res),
 		option.WithMiddleware(logging.Middleware(ctx)),
@@ -301,6 +337,23 @@ func (r *WorkerVersionResource) ImportState(ctx context.Context, req resource.Im
 		return
 	}
 	data = &env.Result
+
+	if data.Modules != nil {
+		for _, mod := range *data.Modules {
+			contentBase64 := mod.ContentBase64.ValueString()
+			content, err := base64.StdEncoding.DecodeString(contentBase64)
+			if err != nil {
+				resp.Diagnostics.AddError("failed to decode module content", err.Error())
+				return
+			}
+			contentSHA256, err := calculateStringHash(string(content))
+			if err != nil {
+				resp.Diagnostics.AddError("failed to calculate content hash", err.Error())
+				return
+			}
+			mod.ContentSHA256 = types.StringValue(contentSHA256)
+		}
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

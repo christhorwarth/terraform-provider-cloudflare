@@ -174,7 +174,17 @@ func ResourceSchema(ctx context.Context) schema.Schema {
 					Attributes: map[string]schema.Attribute{
 						"content_file": schema.StringAttribute{
 							Description: "The file path of the module content.",
-							Required:    true,
+							Optional:    true,
+							Validators: []validator.String{
+								stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("content_base64")),
+							},
+						},
+						"content_base64": schema.StringAttribute{
+							Description: "The base64-encoded content of the module.",
+							Optional:    true,
+							Validators: []validator.String{
+								stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("content_file")),
+							},
 						},
 						"content_type": schema.StringAttribute{
 							Description: "The content type of the module.",
@@ -188,7 +198,7 @@ func ResourceSchema(ctx context.Context) schema.Schema {
 							Description: "The SHA-256 hash of the module content.",
 							Computed:    true,
 							PlanModifiers: []planmodifier.String{
-								ComputeSHA256HashOfContentFile(),
+								ComputeSHA256HashOfContent(),
 								stringplanmodifier.RequiresReplace(),
 							},
 						},

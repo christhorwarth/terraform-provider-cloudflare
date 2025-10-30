@@ -40,11 +40,20 @@ resource "cloudflare_worker_version" "example_worker_version" {
       to = "to"
     }]
   }
+  # Option 1: Reference module content from a file on disk
   modules = [{
     content_file = "dist/index.js"
     content_type = "application/javascript+module"
     name = "index.js"
   }]
+
+  # Option 2: Inline module content as base64-encoded string
+  # Note: content_file and content_base64 are mutually exclusive
+  # modules = [{
+  #   content_base64 = base64encode("export default { fetch() { return new Response('Hello World!') } }")
+  #   content_type = "application/javascript+module"
+  #   name = "index.js"
+  # }]
   placement = {
     mode = "smart"
   }
