@@ -59,6 +59,7 @@ func TestAccCloudflareWorkerVersion_Basic(t *testing.T) {
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"name":           knownvalue.StringExact("index.js"),
 							"content_file":   knownvalue.StringExact(contentFile),
+							"content_base64": knownvalue.Null(),
 							"content_type":   knownvalue.StringExact("application/javascript+module"),
 							"content_sha256": knownvalue.StringExact("e06650aadafc1df60cbf34d68dab2bb20b20d175c9310ed0006169f1a266ef08"),
 						}),
@@ -102,6 +103,7 @@ func TestAccCloudflareWorkerVersion_Basic(t *testing.T) {
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"name":           knownvalue.StringExact("index.js"),
 							"content_file":   knownvalue.StringExact(contentFile),
+							"content_base64": knownvalue.Null(),
 							"content_type":   knownvalue.StringExact("application/javascript+module"),
 							"content_sha256": knownvalue.StringExact("abba0df0e36536eb43b5f543dfd4ce55afc9059fa6a400ccaed8002dbcbedb7b"),
 						}),
@@ -190,7 +192,7 @@ func TestAccCloudflareWorkerVersion_Basic(t *testing.T) {
 				ImportStateIdFunc:       testAccCloudflareWorkerVersionImportStateIdFunc(resourceName, accountID),
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"modules.0.content_file", "bindings"}, // Binding order is different
+				ImportStateVerifyIgnore: []string{"modules.0.content_file", "modules.0.content_base64", "bindings"}, // content_file not stored in API, content_base64 populated on import; binding order is different
 			},
 		},
 	})
