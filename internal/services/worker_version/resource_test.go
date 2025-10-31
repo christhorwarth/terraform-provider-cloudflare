@@ -198,6 +198,68 @@ func TestAccCloudflareWorkerVersion_Basic(t *testing.T) {
 	})
 }
 
+func TestAccCloudflareWorkerVersion_ContentBase64(t *testing.T) {
+	t.Parallel()
+	rnd := utils.GenerateRandomResourceName()
+	accountID := os.Getenv("CLOUDFLARE_ACCOUNT_ID")
+	workerName := "cloudflare_worker." + rnd
+	resourceName := "cloudflare_worker_version." + rnd
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.TestAccPreCheck(t) },
+		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCloudflareWorkerVersionConfigContentBase64(rnd, accountID),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("account_id"), knownvalue.StringExact(accountID)),
+					statecheck.CompareValuePairs(workerName, tfjsonpath.New("id"), resourceName, tfjsonpath.New("worker_id"), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("main_module"), knownvalue.StringExact("index.js")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("modules"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"name":           knownvalue.StringExact("index.js"),
+							"content_file":   knownvalue.Null(),
+							"content_base64": knownvalue.StringExact("ZXhwb3J0IGRlZmF1bHQge2FzeW5jIGZldGNoKCkge3JldHVybiBuZXcgUmVzcG9uc2UoJ0hlbGxvIGZyb20gYmFzZTY0IScpfX0="),
+							"content_type":   knownvalue.StringExact("application/javascript+module"),
+							"content_sha256": knownvalue.StringExact("d0e1cf792981b29449943830ca7119f5e9c839d0419baf161083747f785d887f"),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("usage_model"), knownvalue.StringExact("standard")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("number"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("source"), knownvalue.NotNull()),
+				},
+			},
+			{
+				Config: testAccCloudflareWorkerVersionConfigContentBase64Updated(rnd, accountID),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("modules"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"name":           knownvalue.StringExact("index.js"),
+							"content_file":   knownvalue.Null(),
+							"content_base64": knownvalue.StringExact("ZXhwb3J0IGRlZmF1bHQge2FzeW5jIGZldGNoKCkge3JldHVybiBuZXcgUmVzcG9uc2UoJ1VwZGF0ZWQgZnJvbSBiYXNlNjQhJyl9fQ=="),
+							"content_type":   knownvalue.StringExact("application/javascript+module"),
+							"content_sha256": knownvalue.StringExact("c028232f838abb823bee8f749cade1a3b6b1a5ced950cfa902cfb804c7f68e85"),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportStateIdFunc:       testAccCloudflareWorkerVersionImportStateIdFunc(resourceName, accountID),
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bindings"},
+			},
+		},
+	})
+}
+
 func TestAccCloudflareWorkerVersion_WithAssets(t *testing.T) {
 	t.Parallel()
 	rnd := utils.GenerateRandomResourceName()
@@ -288,6 +350,14 @@ func testAccCloudflareWorkerVersionConfigWithAssets(rnd, accountID, assetsDir st
 
 func testAccCloudflareWorkerVersionConfigBindingOrder(rnd, accountID, contentFile string) string {
 	return acctest.LoadTestCase("basic_binding_order.tf", rnd, accountID, contentFile)
+}
+
+func testAccCloudflareWorkerVersionConfigContentBase64(rnd, accountID string) string {
+	return acctest.LoadTestCase("content_base64.tf", rnd, accountID)
+}
+
+func testAccCloudflareWorkerVersionConfigContentBase64Updated(rnd, accountID string) string {
+	return acctest.LoadTestCase("content_base64_update.tf", rnd, accountID)
 }
 
 func testAccCloudflareWorkerVersionImportStateIdFunc(resourceName, accountID string) resource.ImportStateIdFunc {
