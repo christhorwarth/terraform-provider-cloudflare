@@ -64,6 +64,11 @@ func (r *WorkersCustomDomainResource) Create(ctx context.Context, req resource.C
 		return
 	}
 
+	// Preserve plan values for fields not returned by the API
+	planZoneID := data.ZoneID
+	planService := data.Service
+	planEnvironment := data.Environment
+
 	dataBytes, err := data.MarshalJSON()
 	if err != nil {
 		resp.Diagnostics.AddError("failed to serialize http request", err.Error())
@@ -92,6 +97,11 @@ func (r *WorkersCustomDomainResource) Create(ctx context.Context, req resource.C
 	}
 	data = &env.Result
 
+	// Always restore plan values for write-only fields not returned by the API
+	data.ZoneID = planZoneID
+	data.Service = planService
+	data.Environment = planEnvironment
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -107,6 +117,11 @@ func (r *WorkersCustomDomainResource) Read(ctx context.Context, req resource.Rea
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	// Preserve state values for fields not returned by the API
+	stateZoneID := data.ZoneID
+	stateService := data.Service
+	stateEnvironment := data.Environment
 
 	res := new(http.Response)
 	env := WorkersCustomDomainResultEnvelope{*data}
@@ -135,6 +150,11 @@ func (r *WorkersCustomDomainResource) Read(ctx context.Context, req resource.Rea
 		return
 	}
 	data = &env.Result
+
+	// Always restore state values for write-only fields not returned by the API
+	data.ZoneID = stateZoneID
+	data.Service = stateService
+	data.Environment = stateEnvironment
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

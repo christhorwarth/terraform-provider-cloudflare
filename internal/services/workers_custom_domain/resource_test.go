@@ -183,3 +183,78 @@ func testAccCheckCloudflareWorkerDomainDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+// TestAccCloudflareWorkerDomain_WithWorker reproduces issue #6490 where creating
+// a workers_custom_domain for a worker with subdomain disabled returns a 500 error.
+// See: https://github.com/cloudflare/terraform-provider-cloudflare/issues/6490
+func TestAccCloudflareWorkerDomain_WithWorker(t *testing.T) {
+	zoneID := os.Getenv("CLOUDFLARE_ZONE_ID")
+	zoneName := os.Getenv("CLOUDFLARE_DOMAIN")
+	accountID := os.Getenv("CLOUDFLARE_ACCOUNT_ID")
+
+	var domain cloudflare.WorkersDomain
+	rnd := utils.GenerateRandomResourceName()
+	name := "cloudflare_workers_custom_domain." + rnd
+	hostname := rnd + "." + zoneName
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.TestAccPreCheck(t)
+			acctest.TestAccPreCheck_AccountID(t)
+		},
+		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCloudflareWorkerDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCheckCloudflareWorkerDomainWithWorker(rnd, accountID, zoneID, hostname),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudflareWorkerDomainExists(name, &domain),
+					resource.TestCheckResourceAttr(name, "hostname", hostname),
+					resource.TestCheckResourceAttr(name, "service", rnd),
+					resource.TestCheckResourceAttr(name, "environment", "production"),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckCloudflareWorkerDomainWithWorker(rnd, accountID, zoneID, hostname string) string {
+	return acctest.LoadTestCase("workerdomainwithworker.tf", rnd, accountID, zoneID, hostname)
+}
+
+// TestAccCloudflareWorkerDomain_WithScript tests that custom domains work correctly
+// when using cloudflare_workers_script (which deploys actual code).
+func TestAccCloudflareWorkerDomain_WithScript(t *testing.T) {
+	zoneID := os.Getenv("CLOUDFLARE_ZONE_ID")
+	zoneName := os.Getenv("CLOUDFLARE_DOMAIN")
+	accountID := os.Getenv("CLOUDFLARE_ACCOUNT_ID")
+
+	var domain cloudflare.WorkersDomain
+	rnd := utils.GenerateRandomResourceName()
+	name := "cloudflare_workers_custom_domain." + rnd
+	hostname := rnd + "." + zoneName
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.TestAccPreCheck(t)
+			acctest.TestAccPreCheck_AccountID(t)
+		},
+		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCloudflareWorkerDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCheckCloudflareWorkerDomainWithScript(rnd, accountID, zoneID, hostname),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudflareWorkerDomainExists(name, &domain),
+					resource.TestCheckResourceAttr(name, "hostname", hostname),
+					resource.TestCheckResourceAttr(name, "service", rnd),
+					resource.TestCheckResourceAttr(name, "environment", "production"),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckCloudflareWorkerDomainWithScript(rnd, accountID, zoneID, hostname string) string {
+	return acctest.LoadTestCase("workerdomainwithscript.tf", rnd, accountID, zoneID, hostname)
+}

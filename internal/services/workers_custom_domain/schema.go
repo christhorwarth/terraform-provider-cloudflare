@@ -34,18 +34,18 @@ func ResourceSchema(ctx context.Context) schema.Schema {
 			"service": schema.StringAttribute{
 				Description:   "Worker service associated with the zone and hostname.",
 				Required:      true,
-				PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+				PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown(), stringplanmodifier.RequiresReplace()},
 			},
 			"zone_id": schema.StringAttribute{
 				Description:   "Identifier of the zone.",
 				Required:      true,
-				PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+				PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown(), stringplanmodifier.RequiresReplace()},
 			},
 			"environment": schema.StringAttribute{
 				Description:        "Worker environment associated with the zone and hostname.",
 				Optional:           true,
 				DeprecationMessage: "This attribute is deprecated.",
-				PlanModifiers:      []planmodifier.String{stringplanmodifier.RequiresReplace()},
+				PlanModifiers:      []planmodifier.String{stringplanmodifier.UseStateForUnknown(), stringplanmodifier.RequiresReplace()},
 			},
 			"zone_name": schema.StringAttribute{
 				Description: "Name of the zone.",
