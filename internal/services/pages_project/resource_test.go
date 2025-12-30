@@ -663,6 +663,54 @@ func TestAccCloudflarePagesProject_NoDriftWithSecretEnvVars(t *testing.T) {
 	})
 }
 
+func testPagesProjectNoBuildConfig(resourceID, accountID, projectName string) string {
+	return acctest.LoadTestCase("pagesprojectnobuildconfig.tf", resourceID, accountID, projectName)
+}
+
+// TestAccCloudflarePagesProject_NoBuildConfig tests the fix for the issue where
+// omitting build_config while specifying deployment_configs causes "Provider produced
+// invalid plan" error. This reproduces the issue from GitHub issue following #6545.
+// The fix was to mark build_config as Computed+Optional so the provider can plan
+// non-null values for it even when the user doesn't specify it in the config.
+//
+// This test reproduces the issue by:
+// 1. Creating a resource WITH build_config (so state has build_config)
+// 2. Updating to REMOVE build_config from config (triggers the invalid plan error without fix)
+func TestAccCloudflarePagesProject_NoBuildConfig(t *testing.T) {
+	rnd := utils.GenerateRandomResourceName()
+	name := "cloudflare_pages_project." + rnd
+	projectName := rnd
+	accountID := os.Getenv("CLOUDFLARE_ACCOUNT_ID")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.TestAccPreCheck(t)
+		},
+		ProtoV6ProviderFactories: acctest.TestAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCloudflarePageProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: Create WITH build_config so state has it
+				Config: testPagesProjectBuildConfig(rnd, accountID, projectName),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(name, tfjsonpath.New("name"), knownvalue.StringExact(projectName)),
+					statecheck.ExpectKnownValue(name, tfjsonpath.New("build_config"), knownvalue.NotNull()),
+				},
+			},
+			{
+				// Step 2: Update to REMOVE build_config from config
+				// Before fix: "Provider produced invalid plan... planned value for non-computed attribute"
+				// After fix: Should succeed because build_config is now Computed+Optional
+				Config: testPagesProjectNoBuildConfig(rnd, accountID, projectName),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(name, tfjsonpath.New("name"), knownvalue.StringExact(projectName)),
+					statecheck.ExpectKnownValue(name, tfjsonpath.New("deployment_configs"), knownvalue.NotNull()),
+				},
+			},
+		},
+	})
+}
+
 // TestAccCloudflarePagesProject_NoDriftWithMinimalConfig tests the fix for issue #5928.
 // It verifies that a minimal config (without build_config or deployment_configs) does not
 // show drift on subsequent plans.

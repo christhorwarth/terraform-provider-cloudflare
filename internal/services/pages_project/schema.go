@@ -48,7 +48,9 @@ func ResourceSchema(ctx context.Context) schema.Schema {
 			},
 			"build_config": schema.SingleNestedAttribute{
 				Description: "Configs for the project build process.",
+				Computed:    true,
 				Optional:    true,
+				CustomType:  customfield.NewNestedObjectType[PagesProjectBuildConfigModel](ctx),
 				Attributes: map[string]schema.Attribute{
 					"build_caching": schema.BoolAttribute{
 						Description: "Enable build caching for the project.",

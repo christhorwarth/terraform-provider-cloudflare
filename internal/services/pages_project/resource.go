@@ -227,7 +227,7 @@ func (r *PagesProjectResource) Read(ctx context.Context, req resource.ReadReques
 
 	// Preserve build_config from state only if API didn't return it
 	// This handles the case where the API inconsistently returns build_config
-	if data.BuildConfig == nil && stateData.BuildConfig != nil {
+	if data.BuildConfig.IsNull() && !stateData.BuildConfig.IsNull() {
 		data.BuildConfig = stateData.BuildConfig
 	}
 
@@ -369,9 +369,9 @@ func (r *PagesProjectResource) ModifyPlan(ctx context.Context, req resource.Modi
 		plan.DeploymentConfigs = state.DeploymentConfigs
 	}
 
-	// Preserve build_config if it's null in the plan but present in state.
+	// Preserve build_config if it's null or unknown in the plan but present in state.
 	// This prevents drift when user omits build_config (issue #5928).
-	if plan.BuildConfig == nil && state.BuildConfig != nil {
+	if (plan.BuildConfig.IsUnknown() || plan.BuildConfig.IsNull()) && !state.BuildConfig.IsNull() {
 		plan.BuildConfig = state.BuildConfig
 	}
 
@@ -421,8 +421,12 @@ func NormalizeDeploymentConfigs(ctx context.Context, data *PagesProjectModel) (*
 	}
 
 	// Normalize build_config to null if all fields are empty/null
-	if data.BuildConfig != nil {
-		bc := data.BuildConfig
+	if !data.BuildConfig.IsNull() && !data.BuildConfig.IsUnknown() {
+		bc, d := data.BuildConfig.Value(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return data, diags
+		}
 		allFieldsEmpty := true
 		if !bc.BuildCaching.IsNull() && !bc.BuildCaching.IsUnknown() {
 			allFieldsEmpty = false
@@ -443,7 +447,7 @@ func NormalizeDeploymentConfigs(ctx context.Context, data *PagesProjectModel) (*
 			allFieldsEmpty = false
 		}
 		if allFieldsEmpty {
-			data.BuildConfig = nil
+			data.BuildConfig = customfield.NullObject[PagesProjectBuildConfigModel](ctx)
 		}
 	}
 
